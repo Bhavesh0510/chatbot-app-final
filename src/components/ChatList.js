@@ -7,7 +7,7 @@ import { useSignOut } from '@nhost/react';
 // GraphQL query to fetch all chats for the authenticated user
 const GET_CHATS = gql`
   query GetChats {
-    chats(order_by: { created_at: desc }) {
+    chats(order_by: {created_at: desc}) {
       id
       created_at
     }
