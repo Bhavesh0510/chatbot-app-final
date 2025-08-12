@@ -7,20 +7,25 @@ import { useSignOut } from '@nhost/react';
 // GraphQL query to fetch all chats for the authenticated user
 const GET_CHATS = gql`
   query GetChats {
-    chats(order_by: {created_at: desc}) {
-      id
-      created_at
-    }
+  chats(order_by: {created_at: desc}) {
+    created_at
+    id
   }
+}
 `;
 
 // GraphQL mutation to create a new chat
 const CREATE_CHAT = gql`
-  mutation CreateChat {
-    insert_chats_one(object: {}) {
-      id
+  mutation InsertChats($user_id: uuid!) {
+  insert_chats(objects: {user_id: $user_id}) {
+    affected_rows
+    returning {
+      created_at
+			id
+			user_id
     }
   }
+}
 `;
 
 const ChatList = () => {
