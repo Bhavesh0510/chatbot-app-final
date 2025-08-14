@@ -80,7 +80,6 @@ export default function ChatApp() {
 								}}
 							>
 								<div style={{ fontWeight: 600 }}>{c.title}</div>
-								<div style={{ fontSize: 12, color: '#666' }}>{new Date(c.created_at).toLocaleString()}</div>
 							</div>
 						))
 					)}
