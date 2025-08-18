@@ -7,12 +7,12 @@ import { useUserData } from '@nhost/react'; // To identify current user's messag
 // GraphQL subscription to get real-time messages for a specific chat
 const GET_MESSAGES = gql`
   subscription GetMessages($chatId: uuid!) {
-    messages(order_by: { created_at: desc }, where: { chat_id: { _eq: $chatId } }) {
+    messages(where: { chat_id: { _eq: $chatId } }, order_by: { created_at: asc }) {
       id
       text
       is_bot
-      created_at
       user_id
+      created_at
     }
   }
 `;
@@ -20,7 +20,7 @@ const GET_MESSAGES = gql`
 // GraphQL mutation to insert a new user message into the database
 const INSERT_MESSAGE = gql`
   mutation InsertMessage($chatId: uuid!, $text: String!, $userId: uuid!) {
-    insert_messages_one(object: {chat_id: $chatId, text: $text, is_bot: false, user_id: $userId}) {
+    insert_messages_one(object: { chat_id: $chatId, text: $text, is_bot: false, user_id: $userId }) {
       id
       text
       is_bot

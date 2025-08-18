@@ -6,33 +6,21 @@ import { Link, useNavigate } from 'react-router-dom';
 const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [successMessage, setSuccessMessage] = useState(''); // New state for success message
   const { signUpEmailPassword, isLoading, error } = useSignUpEmailPassword();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSuccessMessage(''); // Clear any previous success message
-
     const { isSuccess } = await signUpEmailPassword(email, password);
-
     if (isSuccess) {
-      // Set the success message to be displayed on the page
-      setSuccessMessage('Sign up successful! Please check your email or spam folder to verify your account.');
-
-      // Wait a moment before redirecting, so the user can see the message
-      setTimeout(() => {
-        navigate('/signin');
-      }, 3000); // Redirect after 3 seconds
+      alert('Sign up successful! Please check your email to verify your account.');
+      navigate('/signin'); // Redirect to sign-in after successful sign-up
     }
   };
 
   return (
     <div className="auth-container">
       <h2>Sign Up</h2>
-      {/* Display the success message at the top of the form */}
-      {successMessage && <p className="success-message">{successMessage}</p>}
-      
       <form onSubmit={handleSubmit} className="auth-form">
         <div className="form-group">
           <label htmlFor="email">Email:</label>
