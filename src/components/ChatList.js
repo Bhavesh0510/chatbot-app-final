@@ -2,17 +2,17 @@
 import React from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { Link } from 'react-router-dom';
-import { useSignOut } from '@nhost/react';
+import { useSignOut, useUserData } from '@nhost/react';
 
 // GraphQL query to fetch all chats for the authenticated user
 const GET_CHATS = gql`
-  query MyQuery {
-  chats(order_by: {created_at: asc}) {
-    user_id
-    created_at
-    id
+  query GetChats($userId: uuid!) {
+    chats(where: { user_id: { _eq: $userId } }, order_by: { created_at: asc }) {
+      id
+      user_id
+      created_at
+    }
   }
-}
 `;
 
 //Error loading chats: field 'created_at' not found in type: 'chats_order_by' 
@@ -38,10 +38,15 @@ const CREATE_CHAT = gql`
 `;
 
 const ChatList = () => {
-  const { data, loading, error } = useQuery(GET_CHATS);
+  const userData = useUserData();
+  const userId = userData?.id;
+  const { data, loading, error } = useQuery(GET_CHATS, {
+    skip: !userId,
+    variables: { userId },
+  });
   const [createChat] = useMutation(CREATE_CHAT, {
     // After creating a new chat, refetch the chat list to update the UI
-    refetchQueries: [{ query: GET_CHATS }],
+    refetchQueries: userId ? [{ query: GET_CHATS, variables: { userId } }] : [],
   });
   const { signOut } = useSignOut();
 
@@ -56,7 +61,11 @@ const ChatList = () => {
           Sign Out
         </button>
       </div>
-      <button onClick={createChat} className="btn-primary new-chat-btn">
+      <button
+        onClick={() => userId && createChat({ variables: { user_id: userId } })}
+        className="btn-primary new-chat-btn"
+        disabled={!userId}
+      >
         Start New Chat
       </button>
       {data.chats.length === 0 ? (

@@ -5,6 +5,7 @@
   "dependencies": {
     "@apollo/client": "^3.9.11",
     "@nhost/react": "^3.11.1",
+    "@nhost/nhost-js": "^3.3.0",
     "@nhost/react-apollo": "^18.0.1",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",

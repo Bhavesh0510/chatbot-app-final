@@ -1,5 +1,5 @@
 // src/nhost.js
-import { NhostClient } from '@nhost/react';
+import { NhostClient } from '@nhost/nhost-js';
 import { ApolloClient, InMemoryCache } from '@apollo/client';
 import { split, HttpLink } from '@apollo/client';
 import { getMainDefinition } from '@apollo/client/utilities';
@@ -19,9 +19,8 @@ export const nhost = new NhostClient({
 
 // Create an HTTP link for queries and mutations
 const httpLink = new HttpLink({
-  uri: `https://${NHOST_SUBDOMAIN}.graphql.${NHOST_REGION}.nhost.run/v1`,
+  uri: `https://${NHOST_SUBDOMAIN}.${NHOST_REGION}.nhost.run/v1/graphql`,
   fetch: async (uri, options) => {
-    // Add Nhost authentication token to headers for authenticated requests
     const accessToken = nhost.auth.getAccessToken();
     if (accessToken) {
       options.headers = {
@@ -36,12 +35,13 @@ const httpLink = new HttpLink({
 // Create a WebSocket link for subscriptions
 const wsLink = new GraphQLWsLink(
   createClient({
-    url: `wss://${NHOST_SUBDOMAIN}.graphql.${NHOST_REGION}.nhost.run/v1`,
-    connectionParams: () => ({
-      headers: {
-        Authorization: `Bearer ${nhost.auth.getAccessToken()}`,
-      },
-    }),
+    url: `wss://${NHOST_SUBDOMAIN}.${NHOST_REGION}.nhost.run/v1/graphql`,
+    connectionParams: async () => {
+      const accessToken = nhost.auth.getAccessToken();
+      return accessToken
+        ? { headers: { Authorization: `Bearer ${accessToken}` } }
+        : {};
+    },
   })
 );
 
