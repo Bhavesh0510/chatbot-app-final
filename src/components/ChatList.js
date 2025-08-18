@@ -2,15 +2,13 @@
 import React from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { Link } from 'react-router-dom';
-import { useSignOut, useUserData } from '@nhost/react';
+import { useSignOut } from '@nhost/react';
 
 // GraphQL query to fetch all chats for the authenticated user
 const GET_CHATS = gql`
-  query GetChats($userId: uuid!) {
-    chats(where: { user_id: { _eq: $userId } }, order_by: { created_at: asc }) {
+  query GetChats {
+    chats {
       id
-      user_id
-      created_at
     }
   }
 `;
@@ -25,28 +23,18 @@ const GET_CHATS = gql`
 
 // GraphQL mutation to create a new chat
 const CREATE_CHAT = gql`
-  mutation InsertChats($user_id: uuid!) {
-  insert_chats(objects: {user_id: $user_id}) {
-    affected_rows
-    returning {
-      created_at
-			id
-			user_id
+  mutation InsertChatOne {
+    insert_chats_one(object: {}) {
+      id
     }
   }
-}
 `;
 
 const ChatList = () => {
-  const userData = useUserData();
-  const userId = userData?.id;
-  const { data, loading, error } = useQuery(GET_CHATS, {
-    skip: !userId,
-    variables: { userId },
-  });
+  const { data, loading, error } = useQuery(GET_CHATS);
   const [createChat] = useMutation(CREATE_CHAT, {
     // After creating a new chat, refetch the chat list to update the UI
-    refetchQueries: userId ? [{ query: GET_CHATS, variables: { userId } }] : [],
+    refetchQueries: [{ query: GET_CHATS }],
   });
   const { signOut } = useSignOut();
 
@@ -61,11 +49,7 @@ const ChatList = () => {
           Sign Out
         </button>
       </div>
-      <button
-        onClick={() => userId && createChat({ variables: { user_id: userId } })}
-        className="btn-primary new-chat-btn"
-        disabled={!userId}
-      >
+      <button onClick={() => createChat()} className="btn-primary new-chat-btn">
         Start New Chat
       </button>
       {data.chats.length === 0 ? (
@@ -75,7 +59,7 @@ const ChatList = () => {
           {data.chats.map((chat) => (
             <li key={chat.id} className="chat-list-item">
               <Link to={`/chat/${chat.id}`} className="chat-link">
-                Chat created on {new Date(chat.created_at).toLocaleDateString()}
+                Chat {chat.id}
               </Link>
             </li>
           ))}
