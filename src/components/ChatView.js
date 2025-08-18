@@ -2,14 +2,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSubscription, useMutation, gql } from '@apollo/client';
+import { useUserData } from '@nhost/react'; // To identify current user's messages
 
 // GraphQL subscription to get real-time messages for a specific chat
 const GET_MESSAGES = gql`
   subscription GetMessages($chatId: uuid!) {
     messages(where: { chat_id: { _eq: $chatId } }, order_by: { created_at: asc }) {
       id
-      role
-      content
+      text
+      is_bot
+      user_id
       created_at
     }
   }
@@ -17,26 +19,25 @@ const GET_MESSAGES = gql`
 
 // GraphQL mutation to insert a new user message into the database
 const INSERT_MESSAGE = gql`
-  mutation InsertMessage($chatId: uuid!, $content: String!) {
-    insert_messages_one(object: { chat_id: $chatId, role: "user", content: $content }) {
+  mutation InsertMessage($chatId: uuid!, $text: String!, $userId: uuid!) {
+    insert_messages_one(object: { chat_id: $chatId, text: $text, is_bot: false, user_id: $userId }) {
       id
-      content
-      role
+      text
+      is_bot
     }
   }
 `;
 
 // GraphQL mutation to call the Hasura Action (which triggers n8n)
 const SEND_MESSAGE_ACTION = gql`
-  mutation SendMessageAction($chatId: uuid!, $content: String!) {
-    sendMessage(chat_id: $chatId, content: $content) {
-      reply_content
-    }
+  mutation SendMessageAction($chatId: uuid!, $message: String!) {
+    sendMessage(chat_id: $chatId, message: $message)
   }
 `;
 
 const ChatView = () => {
   const { chatId } = useParams();
+  const userData = useUserData(); // Get current authenticated user's data
   const [messageText, setMessageText] = useState('');
   const messagesEndRef = useRef(null); // Ref for auto-scrolling to bottom
 
@@ -56,7 +57,7 @@ const ChatView = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!messageText.trim()) return; // Prevent sending empty messages
+    if (!messageText.trim() || !userData?.id) return; // Prevent sending empty messages or if user ID is missing
 
     const userMessage = messageText.trim();
     setMessageText(''); // Clear input immediately
@@ -66,13 +67,14 @@ const ChatView = () => {
       await insertMessage({
         variables: {
           chatId,
-          content: userMessage,
+          text: userMessage,
+          userId: userData.id, // Associate message with current user
         },
       });
 
       // 2. Call the Hasura Action to trigger the chatbot (n8n workflow)
       // The bot's response will be saved by n8n, which will then appear via subscription
-      await sendMessageAction({ variables: { chatId, content: userMessage } });
+      await sendMessageAction({ variables: { chatId, message: userMessage } });
 
     } catch (err) {
       console.error('Error sending message:', err);
@@ -102,9 +104,9 @@ const ChatView = () => {
           messages.map((message) => (
             <div
               key={message.id}
-              className={`message-bubble ${message.role === 'assistant' ? 'bot' : 'user'}`}
+              className={`message-bubble ${message.is_bot ? 'bot' : 'user'}`}
             >
-              <p>{message.content}</p>
+              <p>{message.text}</p>
               <span className="message-timestamp">
                 {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
