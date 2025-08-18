@@ -20,10 +20,9 @@ const GET_MESSAGES = gql`
 // GraphQL mutation to insert a new user message into the database
 const INSERT_MESSAGE = gql`
   mutation InsertMessage($chatId: uuid!, $text: String!, $userId: uuid!) {
-    insert_messages_one(object: { chat_id: $chatId, text: $text, user_id: $userId }) {
+    insert_messages_one(object: { chat_id: $chatId, text: $text }) {
       id
       chat_id
-      user_id
       text
     }
   }
