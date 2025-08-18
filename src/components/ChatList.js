@@ -6,14 +6,22 @@ import { useSignOut } from '@nhost/react';
 
 // GraphQL query to fetch all chats for the authenticated user
 const GET_CHATS = gql`
-  query GetChats {
-  chats(order_by: { created_at: desc }) {
-    id
+  query MyQuery {
+  chats(order_by: {created_at: asc}) {
     user_id
     created_at
+    id
   }
 }
 `;
+
+//Error loading chats: field 'created_at' not found in type: 'chats_order_by' 
+// this error indicates that the 'created_at' field is not defined in the 'chats_order_by' type in your GraphQL schema. 
+// You may need to check your schema definition and ensure that 'created_at' is included in the 'chats_order_by' type if you want to order chats by creation date.
+// If you are using Hasura, ensure that the 'created_at' field is part of the 'chats' table and that it is included in the GraphQL schema. If it is not, you may need to modify your database schema or adjust your query accordingly.
+// If you are using a different GraphQL server, ensure that the 'created_at' field is defined in the schema for the 'chats' type and that it can be used for ordering.
+// If you are using a custom GraphQL server, ensure that the 'created_at' field is defined in the schema for the 'chats' type and that it can be used for ordering.
+
 
 // GraphQL mutation to create a new chat
 const CREATE_CHAT = gql`
