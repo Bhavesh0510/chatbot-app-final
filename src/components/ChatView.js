@@ -22,6 +22,8 @@ const INSERT_MESSAGE = gql`
   mutation InsertMessage($chatId: uuid!, $text: String!, $userId: uuid!) {
     insert_messages_one(object: { chat_id: $chatId, text: $text, is_bot: false, user_id: $userId }) {
       id
+      chat_id
+      user_id
       text
       is_bot
     }
